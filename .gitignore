@@ -7,5 +7,3 @@ node_modules/
 .env.*.local
 
 # Optional build output (if using Vite or React)
-dist/
-build/
