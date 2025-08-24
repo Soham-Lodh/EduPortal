@@ -12,7 +12,7 @@ const port = process.env.PORT;
 
 connectDB();
 
-const allowedOrigins = ["http://localhost:5173", "http://localhost:8080"];
+const allowedOrigins = ["http://localhost:5173", "http://localhost:8080","https://eduportal-frontend.onrender.com"];
 app.use(express.json());
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(cookieParser());
