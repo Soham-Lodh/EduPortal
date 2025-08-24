@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/protected`);
+        const res = await axios.get(`${import.meta.env.VITE_API_URL||"https://eduportal-efyw.onrender.com"}/api/auth/protected`);
         if (res.data.user || res.data.userId) {
           const userData = res.data.user || { id: res.data.userId };
           setUser(userData);
