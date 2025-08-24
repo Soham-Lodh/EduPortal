@@ -17,23 +17,14 @@ const Planner = () => {
   const [events, setEvents] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newEvent, setNewEvent] = useState({
-    title: '',
-    description: '',
+    title: '', 
+    description: '', 
     date: new Date().toISOString().split('T')[0],
-    startTime: '09:00',
-    endTime: '10:00',
-    category: 'study',
+    startTime: '09:00', 
+    endTime: '10:00', 
+    category: 'study', 
     priority: 'medium'
   });
-
-  const formatDate = (date) => {
-    if (!date) return '';
-    const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
 
   const categories = [
     { value: 'assignment', label: 'Assignment', color: 'from-red-500 to-pink-500' },
@@ -49,50 +40,56 @@ const Planner = () => {
     'July','August','September','October','November','December'
   ];
 
+  // Fetch Events
   const fetchEvents = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/events`);
-      const data = res.data.map(e => ({
-        ...e,
-        _id: e._id || e.id,
-        date: new Date(e.date)
+      const data = res.data.map(e => ({ 
+        ...e, 
+        _id: e._id || e.id, 
+        date: new Date(e.date) 
       }));
       setEvents(data);
-    } catch (err) {
+    } catch (err) { 
       console.error('Error fetching events:', err);
     }
   };
 
-  useEffect(() => {
-    if (isAuthenticated) fetchEvents();
+  useEffect(() => { 
+    if (isAuthenticated) {
+      fetchEvents();
+    }
   }, [isAuthenticated]);
 
+  // Event Handlers
   const handleAddEvent = async () => {
     try {
       const categoryColor = categories.find(c => c.value === newEvent.category)?.color || 'from-gray-500 to-gray-600';
+      
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/events`, {
         ...newEvent,
         color: categoryColor,
-        userId: user?.id
+        userId: user?.id // Associate with current user
       });
 
       const createdEvent = { 
-        ...res.data,
+        ...res.data, 
         _id: res.data._id || res.data.id,
         date: new Date(res.data.date)
       };
+      
       setEvents([...events, createdEvent]);
       setNewEvent({
-        title: '',
-        description: '',
+        title: '', 
+        description: '', 
         date: new Date().toISOString().split('T')[0],
-        startTime: '09:00',
-        endTime: '10:00',
-        category: 'study',
+        startTime: '09:00', 
+        endTime: '10:00', 
+        category: 'study', 
         priority: 'medium'
       });
       setIsDialogOpen(false);
-    } catch (err) {
+    } catch (err) { 
       console.error('Error adding event:', err);
     }
   };
@@ -101,10 +98,19 @@ const Planner = () => {
     try {
       const event = events.find(e => e._id === eventId);
       const updatedStatus = event.status === 'completed' ? 'pending' : 'completed';
-      const res = await axios.put(`${import.meta.env.VITE_API_URL}/api/events/${eventId}`, { status: updatedStatus });
-      const updatedEvent = { ...res.data, _id: res.data._id || res.data.id, date: new Date(res.data.date) };
+      
+      const res = await axios.put(`${import.meta.env.VITE_API_URL}/api/events/${eventId}`, {
+        status: updatedStatus
+      });
+
+      const updatedEvent = { 
+        ...res.data, 
+        _id: res.data._id || res.data.id,
+        date: new Date(res.data.date)
+      };
+      
       setEvents(events.map(e => e._id === eventId ? updatedEvent : e));
-    } catch (err) {
+    } catch (err) { 
       console.error('Error updating event:', err);
     }
   };
@@ -113,7 +119,7 @@ const Planner = () => {
     try {
       await axios.delete(`${import.meta.env.VITE_API_URL}/api/events/${eventId}`);
       setEvents(events.filter(e => e._id !== eventId));
-    } catch (err) {
+    } catch (err) { 
       console.error('Error deleting event:', err);
     }
   };
@@ -133,15 +139,22 @@ const Planner = () => {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const days = Array(firstDay.getDay()).fill(null);
-
-    for(let d = 1; d <= lastDay.getDate(); d++) days.push(new Date(year, month, d));
-
+    
+    for(let d = 1; d <= lastDay.getDate(); d++) {
+      days.push(new Date(year, month, d));
+    }
+    
     return days;
   };
 
-  const getEventsForDate = (date) => events.filter(e => e.date.toDateString() === date.toDateString());
+  const getEventsForDate = (date) => {
+    if(!date) return [];
+    return events.filter(e => e.date.toDateString() === date.toDateString());
+  };
 
-  const navigateMonth = (dir) => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + (dir === 'next' ? 1 : -1), 1));
+  const navigateMonth = (dir) => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + (dir === 'next' ? 1 : -1), 1));
+  };
 
   const upcomingTasks = events
     .filter(e => e.status === 'pending')
@@ -160,11 +173,92 @@ const Planner = () => {
     }).length, icon: Target, color: 'text-blue-500'}
   ];
 
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if(!isAuthenticated) return <Navigate to="/login" replace />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50/30 via-pink-50/30 to-blue-50/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gradient flex items-center gap-3">
+              <Calendar className="w-8 h-8" /> Study Planner
+            </h1>
+          </div>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="btn-hero">
+                <Plus className="w-4 h-4 mr-2"/> Add Event
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Event</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <Input 
+                  placeholder="Title" 
+                  value={newEvent.title} 
+                  onChange={e => setNewEvent({...newEvent, title: e.target.value})}
+                />
+                <Textarea 
+                  placeholder="Description" 
+                  value={newEvent.description} 
+                  onChange={e => setNewEvent({...newEvent, description: e.target.value})}
+                />
+                <Input 
+                  type="date" 
+                  value={newEvent.date} 
+                  onChange={e => setNewEvent({...newEvent, date: e.target.value})}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <Input 
+                    type="time" 
+                    value={newEvent.startTime} 
+                    onChange={e => setNewEvent({...newEvent, startTime: e.target.value})}
+                  />
+                  <Input 
+                    type="time" 
+                    value={newEvent.endTime} 
+                    onChange={e => setNewEvent({...newEvent, endTime: e.target.value})}
+                  />
+                </div>
+                <Select 
+                  value={newEvent.category} 
+                  onValueChange={v => setNewEvent({...newEvent, category: v})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(c => (
+                      <SelectItem key={c.value} value={c.value}>
+                        {c.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select 
+                  value={newEvent.priority} 
+                  onValueChange={v => setNewEvent({...newEvent, priority: v})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low Priority</SelectItem>
+                    <SelectItem value="medium">Medium Priority</SelectItem>
+                    <SelectItem value="high">High Priority</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleAddEvent} className="w-full btn-hero">
+                  Create Event
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {stats.map((stat, index) => (
@@ -204,14 +298,16 @@ const Planner = () => {
                 <div className="grid grid-cols-7 gap-2">
                   {getDaysInMonth(currentDate).map((day, index) => {
                     if(!day) return <div key={index} className="bg-muted/20 min-h-[100px] rounded-lg"></div>;
+                    
                     const dayEvents = getEventsForDate(day);
                     const isToday = day.toDateString() === new Date().toDateString();
+                    
                     return (
                       <div key={index} className={`min-h-[100px] p-2 border rounded-lg ${isToday ? 'ring-2 ring-primary' : ''}`}>
                         <div className="text-sm font-medium mb-1">{day.getDate()}</div>
                         <div className="space-y-1">
                           {dayEvents.slice(0, 2).map(event => (
-                            <div key={event._id} className={`text-xs p-1 rounded text-white bg-gradient-to-r ${event.color}`} title={`${event.title} - ${formatDate(event.date)}`}>
+                            <div key={event._id} className={`text-xs p-1 rounded text-white bg-gradient-to-r ${event.color}`} title={event.title}>
                               {event.title}
                             </div>
                           ))}
@@ -245,7 +341,7 @@ const Planner = () => {
                     </Button>
                     <div className="flex-1 min-w-0">
                       <p className={task.status === 'completed' ? 'line-through' : ''}>{task.title}</p>
-                      <p className="text-xs">{formatDate(task.date)} at {task.startTime}</p>
+                      <p className="text-xs">{task.date.toLocaleDateString()} at {task.startTime}</p>
                       <Badge className={`text-xs ${getPriorityColor(task.priority)}`}>
                         {task.priority}
                       </Badge>
