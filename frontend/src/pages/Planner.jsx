@@ -26,16 +26,6 @@ const Planner = () => {
     priority: 'medium'
   });
 
-  // Helper: format date as DD/MM/YYYY
-  const formatDate = (date) => {
-    if (!date) return '';
-    const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0'); // month is 0-indexed
-    const year = d.getFullYear();
-    return ${day}/${month}/${year};
-  };
-
   const categories = [
     { value: 'assignment', label: 'Assignment', color: 'from-red-500 to-pink-500' },
     { value: 'study', label: 'Study Session', color: 'from-blue-500 to-cyan-500' },
@@ -53,7 +43,7 @@ const Planner = () => {
   // Fetch Events
   const fetchEvents = async () => {
     try {
-      const res = await axios.get(${import.meta.env.VITE_API_URL}/api/events);
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/events`);
       const data = res.data.map(e => ({ 
         ...e, 
         _id: e._id || e.id, 
@@ -76,10 +66,10 @@ const Planner = () => {
     try {
       const categoryColor = categories.find(c => c.value === newEvent.category)?.color || 'from-gray-500 to-gray-600';
       
-      const res = await axios.post(${import.meta.env.VITE_API_URL}/api/events, {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/events`, {
         ...newEvent,
         color: categoryColor,
-        userId: user?.id
+        userId: user?.id // Associate with current user
       });
 
       const createdEvent = { 
@@ -109,7 +99,7 @@ const Planner = () => {
       const event = events.find(e => e._id === eventId);
       const updatedStatus = event.status === 'completed' ? 'pending' : 'completed';
       
-      const res = await axios.put(${import.meta.env.VITE_API_URL}/api/events/${eventId}, {
+      const res = await axios.put(`${import.meta.env.VITE_API_URL}/api/events/${eventId}`, {
         status: updatedStatus
       });
 
@@ -127,7 +117,7 @@ const Planner = () => {
 
   const deleteEvent = async (eventId) => {
     try {
-      await axios.delete(${import.meta.env.VITE_API_URL}/api/events/${eventId});
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/events/${eventId}`);
       setEvents(events.filter(e => e._id !== eventId));
     } catch (err) { 
       console.error('Error deleting event:', err);
@@ -188,8 +178,86 @@ const Planner = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50/30 via-pink-50/30 to-blue-50/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header and Add Event Dialog */}
-        {/* ...unchanged code for header, dialog, inputs... */}
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gradient flex items-center gap-3">
+              <Calendar className="w-8 h-8" /> Study Planner
+            </h1>
+          </div>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="btn-hero">
+                <Plus className="w-4 h-4 mr-2"/> Add Event
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Event</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <Input 
+                  placeholder="Title" 
+                  value={newEvent.title} 
+                  onChange={e => setNewEvent({...newEvent, title: e.target.value})}
+                />
+                <Textarea 
+                  placeholder="Description" 
+                  value={newEvent.description} 
+                  onChange={e => setNewEvent({...newEvent, description: e.target.value})}
+                />
+                <Input 
+                  type="date" 
+                  value={newEvent.date} 
+                  onChange={e => setNewEvent({...newEvent, date: e.target.value})}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <Input 
+                    type="time" 
+                    value={newEvent.startTime} 
+                    onChange={e => setNewEvent({...newEvent, startTime: e.target.value})}
+                  />
+                  <Input 
+                    type="time" 
+                    value={newEvent.endTime} 
+                    onChange={e => setNewEvent({...newEvent, endTime: e.target.value})}
+                  />
+                </div>
+                <Select 
+                  value={newEvent.category} 
+                  onValueChange={v => setNewEvent({...newEvent, category: v})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(c => (
+                      <SelectItem key={c.value} value={c.value}>
+                        {c.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select 
+                  value={newEvent.priority} 
+                  onValueChange={v => setNewEvent({...newEvent, priority: v})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low Priority</SelectItem>
+                    <SelectItem value="medium">Medium Priority</SelectItem>
+                    <SelectItem value="high">High Priority</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleAddEvent} className="w-full btn-hero">
+                  Create Event
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -200,7 +268,7 @@ const Planner = () => {
                   <p className="text-sm">{stat.label}</p>
                   <p className="text-2xl font-bold">{stat.value}</p>
                 </div>
-                <stat.icon className={w-6 h-6 ${stat.color}} />
+                <stat.icon className={`w-6 h-6 ${stat.color}`} />
               </CardContent>
             </Card>
           ))}
@@ -235,11 +303,11 @@ const Planner = () => {
                     const isToday = day.toDateString() === new Date().toDateString();
                     
                     return (
-                      <div key={index} className={min-h-[100px] p-2 border rounded-lg ${isToday ? 'ring-2 ring-primary' : ''}}>
+                      <div key={index} className={`min-h-[100px] p-2 border rounded-lg ${isToday ? 'ring-2 ring-primary' : ''}`}>
                         <div className="text-sm font-medium mb-1">{day.getDate()}</div>
                         <div className="space-y-1">
                           {dayEvents.slice(0, 2).map(event => (
-                            <div key={event._id} className={text-xs p-1 rounded text-white bg-gradient-to-r ${event.color}} title={${event.title} - ${formatDate(event.date)}}>
+                            <div key={event._id} className={`text-xs p-1 rounded text-white bg-gradient-to-r ${event.color}`} title={event.title}>
                               {event.title}
                             </div>
                           ))}
@@ -273,8 +341,8 @@ const Planner = () => {
                     </Button>
                     <div className="flex-1 min-w-0">
                       <p className={task.status === 'completed' ? 'line-through' : ''}>{task.title}</p>
-                      <p className="text-xs">{formatDate(task.date)} at {task.startTime}</p>
-                      <Badge className={text-xs ${getPriorityColor(task.priority)}}>
+                      <p className="text-xs">{task.date.toLocaleDateString()} at {task.startTime}</p>
+                      <Badge className={`text-xs ${getPriorityColor(task.priority)}`}>
                         {task.priority}
                       </Badge>
                     </div>
